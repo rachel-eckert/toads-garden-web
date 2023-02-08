@@ -19,15 +19,7 @@ class Town extends Phaser.Scene {
     this.load.tilemapTiledJSON("townBeta", "../assets/json/townBeta.json");
     this.load.image("townTiles", "../assets/img/townTiles.png");
     // this.load.image("pipe", "../assets/img/pipe.png");
-    this.load.spritesheet(
-      "townMushroomSprite",
-      "assets/img/townMushroomSprite.png",
-      {
-        frameWidth: 48,
-        frameHeight: 49,
-      }
-    );
-    // this.load.atlas("toad", "./assets/img/toad.png", "./assets/json/toad.json");
+
     this.load.atlas(
       "bunny",
       "./assets/img/bunny.png",
@@ -98,7 +90,7 @@ class Town extends Phaser.Scene {
     const bridges = townMap.createLayer("Bridges", tileset);
     const houses = townMap.createLayer("Houses", tileset);
 
-    player = this.physics.add.sprite(100, 400, "townMushroomSprite");
+    // player = this.physics.add.sprite(100, 400, "townMushroomSprite");
     player.setCollideWorldBounds("true");
     // player.setBounce(0.2);
 
