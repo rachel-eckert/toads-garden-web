@@ -2,6 +2,7 @@ import { Scene } from "phaser";
 import generateAnimations from "../config/animations";
 var witch;
 var singlePlatform;
+var contributions;
 
 class Intro extends Scene {
   constructor() {
@@ -54,6 +55,26 @@ class Intro extends Scene {
   create() {
     this.add.image(960, 240, "background");
     //add invisible platform
+    contributions = this.add.text(
+      475,
+      410,
+      "Developed By: Catherine Onia, Rachel Eckert, Marcela Alonso, and Lindsay Powell",
+      { fontSize: "10px", fill: "#29465B" }
+    );
+    this.add.text(
+      470,
+      420,
+      "Rachel Eckert, Marcela Alonso, and Lindsay Powell",
+      { fontSize: "10px", fill: "#29465B" }
+    );
+    this.add.text(505, 430, "and Lindsay Powell", {
+      fontSize: "10px",
+      fill: "#29465B",
+    });
+    this.add.text(545, 440, "2023", {
+      fontSize: "10px",
+      fill: "#29465B",
+    });
     singlePlatform = this.physics.add.staticGroup();
     singlePlatform
       .create(580, 410, "singlePlatform")
