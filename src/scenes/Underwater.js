@@ -15,6 +15,7 @@ var cameras;
 var pipe;
 var waterMusic;
 var collectSound;
+var pipeSound;
 
 class Underwater extends Phaser.Scene {
   constructor() {
@@ -31,11 +32,13 @@ class Underwater extends Phaser.Scene {
   preload() {
     this.load.audio("water", "../assets/audio/water.mp3"); //water audio
     this.load.audio("collect", "../assets/audio/collect.mp3"); // collect audio
+    this.load.audio("pipeSound", "../assets/audio/pipeSound.mp3"); //pipe audio
     this.load.image("waterbg", "../assets/img/waterbg.png"); //background
     this.load.image("audioOn", "../assets/img/audioOn.png"); //musicOn
     this.load.image("audioOff", "../assets/img/audioOff.png"); //musicOff
     this.load.image("water", "../assets/img/water.png"); //terrain
     this.load.image("bubbles", "../assets/img/bubble_1.png"); //icons
+    this.load.image("pauseWhite", "../assets/img/pauseWhite.png");
     this.load.tilemapTiledJSON("waterMap", "../assets/json/watermap.json"); //map.json
     this.load.image("pipe", "../assets/img/pipe.png"); //pipe
     this.load.spritesheet("toad", "assets/img/toad.png", {
@@ -64,9 +67,10 @@ class Underwater extends Phaser.Scene {
     );
   }
   create() {
+    this.cameras.main.fadeIn(1000, 0, 0, 0);
     this.cameras.main.setBounds(0, 0, 1920, 480);
     this.physics.world.setBounds(0, 0, 1920, 480);
-
+    let isPaused = false;
     //cursors
     this.inputs = this.input.keyboard.createCursorKeys();
     cursors = this.input.keyboard.createCursorKeys();
@@ -120,6 +124,7 @@ class Underwater extends Phaser.Scene {
     //music
     let click = 0;
     var collectSound = this.sound.add("collect", { loop: false, volume: 0.5 });
+    var pipeSound = this.sound.add("pipeSound", { loop: false, volume: 0.5 });
     var waterMusic = this.sound.add("water", { loop: true, volume: 0.1 });
     waterMusic.play();
     let audioOn = this.add
@@ -130,7 +135,7 @@ class Underwater extends Phaser.Scene {
     audioOn.on("pointerup", () => {
       if (click % 2 || click === 0) {
         collectSound.play({ volume: 0 });
-        waterMusic.stop();
+        waterMusic.pause();
         audioOn = this.add
           .image(620, 30, "audioOff")
           .setScale(0.5)
@@ -138,7 +143,7 @@ class Underwater extends Phaser.Scene {
         click++;
       } else {
         collectSound.play({ volume: 0.5 });
-        waterMusic.play();
+        waterMusic.resume();
         audioOn = this.add
           .image(620, 30, "audioOn")
           .setScale(0.5)
@@ -155,8 +160,8 @@ class Underwater extends Phaser.Scene {
       let octObj = octopuses.create(object.x, object.y, "octopus");
       octObj.setScale(object.width / 12, object.height / 12);
       octObj.setOrigin(0);
-      octObj.setSize(20, 18, true);
-      octObj.setOffset(7, 6);
+      octObj.setSize(14, 16, true);
+      octObj.setOffset(8, 6);
       octObj.body.width = object.width;
 
       octObj.direction = "DOWN";
@@ -173,6 +178,8 @@ class Underwater extends Phaser.Scene {
       let crabObj = crabs.create(object.x, object.y, "crab");
       crabObj.setScale(object.width / 16, object.height / 16);
       crabObj.setOrigin(0);
+      crabObj.setSize(20, 16, true);
+      crabObj.setOffset(6, 0);
       crabObj.body.width = object.width;
       crabObj.direction = "RIGHT";
       crabObj.body.height = object.height;
@@ -182,7 +189,7 @@ class Underwater extends Phaser.Scene {
 
     //score
     text = this.add
-      .text(20, 23, `Bubbles Collected: ${score}`, {
+      .text(20, 23, `Bubbles Collected: ${score} / 15`, {
         fontSize: "20px",
         fill: "#ffffff",
       })
@@ -193,7 +200,7 @@ class Underwater extends Phaser.Scene {
       collectibleBubble.destroy(collectibleBubble.x, collectibleBubble.y);
       collectSound.play();
       score++;
-      text.setText(`Bubbles Collected: ${score}`);
+      text.setText(`Bubbles Collected: ${score} / 15`);
       return false;
     }
 
@@ -201,6 +208,8 @@ class Underwater extends Phaser.Scene {
     player = this.physics.add.sprite(100, 400, "toad");
     player.setCollideWorldBounds("true");
     player.setBounce(0.2);
+    player.setSize(40, 40);
+    player.setOffset(4, 4);
     this.cameras.main.startFollow(player, true, 0.08, 0.08);
     this.physics.add.collider(player, waterGround);
     this.physics.add.collider(player, waterPipe);
@@ -220,6 +229,20 @@ class Underwater extends Phaser.Scene {
       }
       this.time.delayedCall(800, restart, [], this);
     }
+    let pauseButton = this.add
+      .image(590, 31, "pauseWhite")
+      .setScale(0.5)
+      .setScrollFactor(0);
+
+    pauseButton.setInteractive();
+    pauseButton.on("pointerup", () => {
+      this.isPaused = !this.isPaused;
+      if (!this.isPaused) {
+        this.game.loop.sleep();
+      } else {
+        this.game.loop.wake();
+      }
+    });
   }
 
   update() {
@@ -281,8 +304,15 @@ class Underwater extends Phaser.Scene {
     var xDifference = Math.abs(Math.floor(player.body.x) - 1825);
     var yDifference = Math.abs(Math.floor(player.body.y) - 340);
     var threshhold = 5;
-    if (xDifference <= threshhold && yDifference <= threshhold && score >= 3) {
+    var xThreshhold = 30;
+    if (
+      xDifference <= xThreshhold &&
+      yDifference <= threshhold &&
+      score >= 15
+    ) {
       this.scene.start("Outro");
+      score = 0;
+      this.sound.play("pipeSound");
       this.sound.removeByKey("water");
     }
   }

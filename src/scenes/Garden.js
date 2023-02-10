@@ -5,14 +5,16 @@ var cursors;
 var player;
 var CollectibleLayer;
 var EnemyLayer;
-
+var cameras;
 var collectibles;
 var score = 0;
 var text;
 var bunnies;
 var gardenMusic;
 var collectSound;
+var pipeSound;
 var gameOver = false;
+var pauseButton;
 
 class Garden extends Phaser.Scene {
   constructor() {
@@ -21,9 +23,11 @@ class Garden extends Phaser.Scene {
   preload() {
     this.load.audio("garden", "../assets/audio/garden.mp3"); //garden audio
     this.load.audio("collect", "../assets/audio/collect.mp3"); //collect audio
+    this.load.audio("pipeSound", "../assets/audio/pipeSound.mp3"); //pipe audio
     this.load.image("background", "../assets/img/garden.png"); //background
     this.load.image("audioOnBlack", "../assets/img/audioOnBlack.png"); //musicOn
     this.load.image("audioOffBlack", "../assets/img/audioOffBlack.png"); //musicOff
+    this.load.image("pauseBlack", "../assets/img/pauseBlack.png");
     this.load.image("tiles", "../assets/img/terrain.png"); //terrain
     this.load.image("collectible", "../assets/img/icons.png"); //icons
     this.load.image("play-btn", "../assets/img/playButton.png"); //playButton
@@ -68,10 +72,12 @@ class Garden extends Phaser.Scene {
     const y = innerHeight / 2;
 
     this.add.image(960, 240, "background");
-
+    this.cameras.main.fadeIn(1000, 0, 0, 0);
     //music
     let click = 0;
+    let isPaused = false;
     var collectSound = this.sound.add("collect", { loop: false, volume: 0.5 });
+    var pipeSound = this.sound.add("pipeSound", { loop: false, volume: 0.5 });
     var gardenMusic = this.sound.add("garden", { loop: true, volume: 0.1 });
     gardenMusic.play();
     let audioOn = this.add
@@ -82,7 +88,7 @@ class Garden extends Phaser.Scene {
     audioOn.on("pointerup", () => {
       if (click % 2 || click === 0) {
         collectSound.play({ volume: 0 });
-        gardenMusic.stop();
+        gardenMusic.pause();
         audioOn = this.add
           .image(620, 30, "audioOffBlack")
           .setScale(0.5)
@@ -90,7 +96,7 @@ class Garden extends Phaser.Scene {
         click++;
       } else {
         collectSound.play({ volume: 0.5 });
-        gardenMusic.play();
+        gardenMusic.resume();
         audioOn = this.add
           .image(620, 30, "audioOnBlack")
           .setScale(0.5)
@@ -98,6 +104,20 @@ class Garden extends Phaser.Scene {
         click++;
       }
       return click;
+    });
+    let pauseButton = this.add
+      .image(590, 31, "pauseBlack")
+      .setScale(0.5)
+      .setScrollFactor(0);
+
+    pauseButton.setInteractive();
+    pauseButton.on("pointerup", () => {
+      this.isPaused = !this.isPaused;
+      if (!this.isPaused) {
+        this.game.loop.sleep();
+      } else {
+        this.game.loop.wake();
+      }
     });
 
     //platforms and ground
@@ -164,7 +184,7 @@ class Garden extends Phaser.Scene {
 
     //score
     text = this.add
-      .text(20, 23, `Herbs Collected: ${score}`, {
+      .text(20, 23, `Herbs Collected: ${score} / 15`, {
         fontSize: "20px",
         fill: "#000000",
       })
@@ -175,7 +195,7 @@ class Garden extends Phaser.Scene {
       collectible.destroy(collectible.x, collectible.y);
       collectSound.play();
       score++;
-      text.setText(`Herbs Collected: ${score}`);
+      text.setText(`Herbs Collected: ${score} / 15`);
       return false;
     }
     //hit enemy
@@ -214,8 +234,15 @@ class Garden extends Phaser.Scene {
     var xDifference = Math.abs(Math.floor(player.sprite.x) - 1853);
     var yDifference = Math.abs(Math.floor(player.sprite.y) - 362);
     var threshhold = 5;
-    if (xDifference <= threshhold && yDifference <= threshhold && score >= 15) {
-      this.scene.start("Forest");
+    var xThreshhold = 30;
+    if (
+      xDifference <= xThreshhold &&
+      yDifference <= threshhold &&
+      score >= 15
+    ) {
+      this.scene.start("Transition1");
+      score = 0;
+      this.sound.play("pipeSound");
       this.sound.removeByKey("garden");
     }
   }

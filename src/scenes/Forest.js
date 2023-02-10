@@ -13,7 +13,8 @@ var foxes;
 var gameOver = false;
 var forestMusic;
 var collectSound;
-
+var pipeSound;
+var cameras;
 class Forest extends Phaser.Scene {
   constructor() {
     super("Forest");
@@ -21,8 +22,10 @@ class Forest extends Phaser.Scene {
   preload() {
     this.load.audio("forest", "../assets/audio/forest.mp3"); //forest audio
     this.load.audio("collect", "../assets/audio/collect.mp3"); //collect audio
+    this.load.audio("pipeSound", "../assets/audio/pipeSound.mp3"); //pipe audio
     this.load.image("forest", "../assets/img/forest.png"); //background
-    this.load.image("audioOn", "../assets/img/audioOn.png"); //audio button
+    this.load.image("audioOn", "../assets/img/audioOn.png"); //audio button\
+    this.load.image("pauseWhite", "../assets/img/pauseWhite.png");
     this.load.image("audioOff", "../assets/img/audioOff.png"); //audioOff button
     this.load.image("forestTiles", "../assets/img/forest-terrain.png"); //terrain
     this.load.image("wood", "../assets/img/wood.png"); //icons
@@ -61,9 +64,10 @@ class Forest extends Phaser.Scene {
 
   create() {
     //cursors
+    this.cameras.main.fadeIn(300, 0, 0, 0);
     this.inputs = this.input.keyboard.createCursorKeys();
     cursors = this.input.keyboard.createCursorKeys();
-
+    let isPaused = false;
     //platforms and ground
     this.add.image(960, 240, "forest");
     let pipe = this.add.image(1850, 410, "pipe");
@@ -103,8 +107,8 @@ class Forest extends Phaser.Scene {
       let foxObj = foxes.create(object.x, object.y, "fox");
       foxObj.setScale(object.width / 12, object.height / 12);
       foxObj.setOrigin(0);
-      foxObj.setSize(32, 18, true);
-      foxObj.setOffset(0, 14);
+      foxObj.setSize(18, 16, true);
+      foxObj.setOffset(7, 16);
       foxObj.body.width = object.width;
       foxObj.direction = "RIGHT";
       foxObj.body.height = object.height;
@@ -115,7 +119,7 @@ class Forest extends Phaser.Scene {
 
     //score and collect items
     text = this.add
-      .text(20, 23, `Wood Collected: ${score}`, {
+      .text(20, 23, `Wood Collected: ${score} / 15`, {
         fontSize: "20px",
         fill: "#ffffff",
       })
@@ -125,7 +129,7 @@ class Forest extends Phaser.Scene {
       collectibleWood.destroy(collectibleWood.x, collectibleWood.y);
       collectSound.play();
       score++;
-      text.setText(`Wood Collected: ${score}`);
+      text.setText(`Wood Collected: ${score} / 15`);
       return false;
     }
     //hit enemy
@@ -134,7 +138,6 @@ class Forest extends Phaser.Scene {
       gameIsOver();
     }
     function gameIsOver() {
-      gameOver = true;
       player.die();
       score = 0;
     }
@@ -147,6 +150,7 @@ class Forest extends Phaser.Scene {
     //music
     let click = 0;
     var collectSound = this.sound.add("collect", { loop: false, volume: 0.5 });
+    var pipeSound = this.sound.add("pipeSound", { loop: false, volume: 0.5 });
     var forestMusic = this.sound.add("forest", { loop: true, volume: 0.1 });
     forestMusic.play();
     let audioOn = this.add
@@ -157,7 +161,7 @@ class Forest extends Phaser.Scene {
     audioOn.on("pointerup", () => {
       if (click % 2 || click === 0) {
         collectSound.play({ volume: 0 });
-        forestMusic.stop();
+        forestMusic.pause();
         audioOn = this.add
           .image(620, 30, "audioOff")
           .setScale(0.5)
@@ -165,7 +169,7 @@ class Forest extends Phaser.Scene {
         click++;
       } else {
         collectSound.play({ volume: 0.5 });
-        forestMusic.play();
+        forestMusic.resume();
         audioOn = this.add
           .image(620, 30, "audioOn")
           .setScale(0.5)
@@ -173,6 +177,20 @@ class Forest extends Phaser.Scene {
         click++;
       }
       return click;
+    });
+    let pauseButton = this.add
+      .image(590, 31, "pauseWhite")
+      .setScale(0.5)
+      .setScrollFactor(0);
+
+    pauseButton.setInteractive();
+    pauseButton.on("pointerup", () => {
+      this.isPaused = !this.isPaused;
+      if (!this.isPaused) {
+        this.game.loop.sleep();
+      } else {
+        this.game.loop.wake();
+      }
     });
   }
 
@@ -198,8 +216,15 @@ class Forest extends Phaser.Scene {
     var xDifference = Math.abs(Math.floor(player.sprite.x) - 1853);
     var yDifference = Math.abs(Math.floor(player.sprite.y) - 346);
     var threshhold = 5;
-    if (xDifference <= threshhold && yDifference <= threshhold && score >= 15) {
-      this.scene.start("Underwater");
+    var xThreshhold = 30;
+    if (
+      xDifference <= xThreshhold &&
+      yDifference <= threshhold &&
+      score >= 15
+    ) {
+      this.scene.start("Transition2");
+      this.sound.play("pipeSound");
+      score = 0;
       this.sound.removeByKey("forest");
     }
   }

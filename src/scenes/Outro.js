@@ -88,11 +88,11 @@ class Outro extends Phaser.Scene {
     audioOn.on("pointerup", () => {
       if (click % 2 || click === 0) {
         collectSound.play({ volume: 0 });
-        beachMusic.stop();
+        beachMusic.pause();
         audioOn = this.add.image(620, 30, "audioOffBlack").setScale(0.5);
         click++;
       } else {
-        beachMusic.play();
+        beachMusic.resume();
         audioOn = this.add.image(620, 30, "audioOnBlack").setScale(0.5);
         click++;
       }

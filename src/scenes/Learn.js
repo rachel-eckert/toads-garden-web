@@ -9,8 +9,9 @@ var pipe;
 var singlePlat;
 var introMusic;
 var collectSound;
+var pipeSound;
 var bubble;
-
+var cameras;
 class Learn extends Phaser.Scene {
   constructor(data) {
     super("Learn");
@@ -19,6 +20,7 @@ class Learn extends Phaser.Scene {
   preload() {
     this.load.audio("intro", "../assets/audio/intro.mp3");
     this.load.audio("collect", "../assets/audio/collect.mp3");
+    this.load.audio("pipeSound", "../assets/audio/pipeSound.mp3");
     this.load.image("audioOnBlack", "../assets/img/audioOnBlack.png");
     this.load.image("audioOffBlack", "../assets/img/audioOffBlack.png");
     this.load.image("background", "../assets/img/garden.png");
@@ -76,6 +78,7 @@ class Learn extends Phaser.Scene {
     //music
     let click = 0;
     var collectSound = this.sound.add("collect", { loop: false, volume: 0.5 });
+    var pipeSound = this.sound.add("pipeSound", { loop: false, volume: 0.5 });
     var introMusic = this.sound.add("intro", { loop: true, volume: 0.1 });
     introMusic.play();
     let audioOn = this.add
@@ -86,11 +89,11 @@ class Learn extends Phaser.Scene {
     audioOn.on("pointerup", () => {
       if (click % 2 || click === 0) {
         collectSound.play({ volume: 0 });
-        introMusic.stop();
+        introMusic.pause();
         audioOn = this.add.image(620, 30, "audioOffBlack").setScale(0.5);
         click++;
       } else {
-        introMusic.play();
+        introMusic.resume();
         audioOn = this.add.image(620, 30, "audioOnBlack").setScale(0.5);
         click++;
       }
@@ -119,6 +122,8 @@ class Learn extends Phaser.Scene {
     player = this.physics.add.sprite(100, 400, "toad");
     player.setCollideWorldBounds("true");
     player.setBounce(0.2);
+    player.setSize(40, 40);
+    player.setOffset(4, 4);
 
     cursors = this.input.keyboard.createCursorKeys();
 
@@ -145,7 +150,7 @@ class Learn extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.typewriteText(
-      "                \nToad uses the left, right, and up \nbuttons to move around.\n                 \nJumping into items collects them for the town.\nToad can jump onto platforms to help get around.\n                \nThe pipes at the end of the stage transport  \nyou to the next world once you've \ncollected 15 items. \n                \nThere aren't any enemies here but \nwatch out on your journey!"
+      "                \nUse left, right, and up to move.\n                 \nYou must collect 15 items to move on.\n                \nThere aren't any enemies here but \nwatch out for wildlife on your journey!"
     );
   }
 
@@ -173,8 +178,10 @@ class Learn extends Phaser.Scene {
     var xDifference = Math.abs(Math.floor(player.body.x) - 548);
     var yDifference = Math.abs(Math.floor(player.body.y) - 336);
     var threshhold = 5;
-    if (xDifference <= threshhold && yDifference <= threshhold) {
+    var xThreshhold = 30;
+    if (xDifference <= xThreshhold && yDifference <= threshhold) {
       this.scene.start("Garden");
+      this.sound.play("pipeSound");
       this.sound.removeByKey("intro");
     }
   }
