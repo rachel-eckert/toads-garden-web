@@ -12,6 +12,8 @@ Players play as Toad and navigate through 3 mystical worlds: a Secret Garden, En
 
 This repo powers Toad's Garden, please click this link to play the deployed version: https://toads-garden.onrender.com/
 
+You may have to reload the page once or twice due to constraints with Render.
+
 ## Project Setup
 
 1. Install NPM packages: npm install

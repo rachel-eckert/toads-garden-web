@@ -2,6 +2,7 @@ const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const package = require("./package.json");
+const FaviconsWebpackPlugin = require("favicons-webpack-plugin");
 
 module.exports = {
   entry: path.resolve(__dirname, "./src/index.js"),
@@ -72,5 +73,6 @@ module.exports = {
       inject: "body",
       hot: true,
     }),
+    new FaviconsWebpackPlugin("1f344.png"),
   ],
 };
